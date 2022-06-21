@@ -20,11 +20,9 @@ impl Server {
     pub fn run(self, mut handler: impl Handler) {
         let listener = TcpListener::bind(&self.addr).unwrap();
         println!("Listening on {}", self.addr);
-
-        loop {
-            match listener.accept() {
-                Ok((mut stream, _addr)) => {
-                    // TODO: handle socket streams larger than 1024
+        for stream in listener.incoming() {
+            match stream {
+                Ok(mut stream) => {
                     let mut buffer = [0; 1024];
                     match stream.read(&mut buffer) {
                         Ok(_) => {
@@ -44,7 +42,6 @@ impl Server {
                 }
                 Err(e) => {
                     println!("Failed to establish a connection: {}", e);
-                    continue;
                 }
             }
         }
