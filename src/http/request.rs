@@ -16,7 +16,7 @@ pub struct Request<'buf> {
 }
 impl<'buf> Request<'buf> {
     pub fn path(&self) -> &str {
-        &self.path
+        self.path
     }
     pub fn method(&self) -> &Method {
         &self.method
@@ -28,28 +28,28 @@ impl<'buf> Request<'buf> {
 
 // TryFrom implements TryInto for free
 impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
-    type Error = ParseError;
+    type Error = ParseErrorInvalid;
     fn try_from(buf: &'buf [u8]) -> Result<Self, Self::Error> {
         let request = str::from_utf8(buf)?;
 
-        let (method, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
-        let (mut path, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
-        let (protocol, _) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
+        let (method, request) = get_next_word(request).ok_or(ParseErrorInvalid::Request)?;
+        let (mut path, request) = get_next_word(request).ok_or(ParseErrorInvalid::Request)?;
+        let (protocol, _) = get_next_word(request).ok_or(ParseErrorInvalid::Request)?;
 
         if protocol != "HTTP/1.1" {
-            return Err(ParseError::InvalidProtocol);
+            return Err(ParseErrorInvalid::Protocol);
         }
         let method: Method = method.parse()?;
 
         let mut query_str = None;
-        if let Some(i) = path.find("?") {
+        if let Some(i) = path.find('?') {
             query_str = Some(QueryString::from(&path[i + 1..]));
             path = &path[..i];
         }
         Ok(Self {
-            path: path,
-            query_str: query_str,
-            method: method,
+            path,
+            query_str,
+            method,
         })
     }
 }
@@ -63,45 +63,45 @@ fn get_next_word(request: &str) -> Option<(&str, &str)> {
     None
 }
 
-pub enum ParseError {
-    InvalidRequest,
-    InvalidEncoding,
-    InvalidProtocol,
-    InvalidMethod,
+pub enum ParseErrorInvalid {
+    Request,
+    Encoding,
+    Protocol,
+    Method,
 }
 
-impl ParseError {
+impl ParseErrorInvalid {
     fn message(&self) -> &str {
         match self {
-            Self::InvalidRequest => "Invalid Request",
-            Self::InvalidEncoding => "Invalid Encoding",
-            Self::InvalidProtocol => "Invalid Protocol",
-            Self::InvalidMethod => "Invalid Method",
+            Self::Request => "Invalid Request",
+            Self::Encoding => "Invalid Encoding",
+            Self::Protocol => "Invalid Protocol",
+            Self::Method => "Invalid Method",
         }
     }
 }
 
-impl From<Utf8Error> for ParseError {
+impl From<Utf8Error> for ParseErrorInvalid {
     fn from(_: Utf8Error) -> Self {
-        Self::InvalidEncoding
+        Self::Encoding
     }
 }
 
-impl From<MethodError> for ParseError {
+impl From<MethodError> for ParseErrorInvalid {
     fn from(_: MethodError) -> Self {
-        Self::InvalidMethod
+        Self::Method
     }
 }
-impl Debug for ParseError {
+impl Debug for ParseErrorInvalid {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{}", self.message())
     }
 }
 
-impl Display for ParseError {
+impl Display for ParseErrorInvalid {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{}", self.message())
     }
 }
 
-impl Error for ParseError {}
+impl Error for ParseErrorInvalid {}

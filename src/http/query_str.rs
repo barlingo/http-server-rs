@@ -20,10 +20,10 @@ impl<'buf> QueryString<'buf> {
 impl<'buf> From<&'buf str> for QueryString<'buf> {
     fn from(s: &'buf str) -> Self {
         let mut data = HashMap::new();
-        for sub_str in s.split("&") {
+        for sub_str in s.split('&') {
             let mut key = sub_str;
             let mut val = "";
-            if let Some(i) = s.find("=") {
+            if let Some(i) = s.find('=') {
                 key = &sub_str[..i];
                 val = &sub_str[i + 1..];
             }

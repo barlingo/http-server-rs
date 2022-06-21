@@ -1,6 +1,6 @@
 pub use method::{Method, MethodError};
 pub use query_str::{QueryString, Value as QueryStringValue};
-pub use request::ParseError;
+pub use request::ParseErrorInvalid;
 pub use request::Request;
 pub use response::Response;
 pub use status_code::StatusCode;

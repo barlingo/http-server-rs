@@ -30,13 +30,9 @@ impl WebsiteHandler {
 impl Handler for WebsiteHandler {
     fn handle_request(&mut self, request: &Request) -> Response {
         match request.method() {
-            Method::GET => match request.path() {
-                path => match self.read_file(path) {
-                    Some(contents) => Response::new(StatusCode::Ok, Some(contents)),
-                    None => Response::new(StatusCode::NotFound, None),
-                },
-
-                _ => Response::new(StatusCode::NotFound, None),
+            Method::Get => match self.read_file(request.path()) {
+                Some(contents) => Response::new(StatusCode::Ok, Some(contents)),
+                None => Response::new(StatusCode::NotFound, None),
             },
             _ => Response::new(StatusCode::NotFound, None),
         }

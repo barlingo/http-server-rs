@@ -1,10 +1,10 @@
-use crate::http::{ParseError, Request, Response, StatusCode};
+use crate::http::{ParseErrorInvalid, Request, Response, StatusCode};
 use std::convert::TryFrom;
 use std::{io::Read, net::TcpListener};
 
 pub trait Handler {
     fn handle_request(&mut self, request: &Request) -> Response;
-    fn handle_bad_request(&mut self, e: &ParseError) -> Response {
+    fn handle_bad_request(&mut self, e: &ParseErrorInvalid) -> Response {
         println!("Failed to parse request {}", e);
         Response::new(StatusCode::BadRequest, None)
     }
@@ -23,7 +23,7 @@ impl Server {
 
         loop {
             match listener.accept() {
-                Ok((mut stream, addr)) => {
+                Ok((mut stream, _addr)) => {
                     // TODO: handle socket streams larger than 1024
                     let mut buffer = [0; 1024];
                     match stream.read(&mut buffer) {
